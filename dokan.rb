@@ -52,6 +52,7 @@ class Dokan
     loadconf( consumer )
   end
 
+  private
   def loadconf( consumer )
     @db.transaction do
       @user = @db[:default_user] unless @user
@@ -72,7 +73,7 @@ class Dokan
     print "#{@user} has been set as Default user.\n"
   end
 
-  # proxy does not implement yet
+  # proxy is not implement yet
   def http_new( uri, use_proxy = true )
     Net::HTTP.new( uri.host, uri.port )
   end
@@ -83,11 +84,11 @@ class Dokan
     http =  http_new( u, false )
     http.use_ssl = true
     http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-    req = Net::HTTP::Post.new(u.request_uri)
-    res = http.request(req)
+    req = Net::HTTP::Post.new( u.request_uri )
+    res = http.request( req )
     raise RuntimeError, "HTTP: #{res.code}" if res.code != "200"
     at = ot = nil
-    res.body.split(/\n/).each do |line|
+    res.body.split( /\n/ ).each do |line|
       if /name="authenticity_token" type="hidden" value="([^"]+)"/ =~ line
         at = $1
       end
@@ -101,15 +102,15 @@ class Dokan
           "oauth_token=#{ot}",
           "session[username_or_email]=#{user}",
           "session[password]=#{pass}",
-          "submit=Allow" ].join("&")
+          "submit=Allow" ].join( "&" )
     u = URI::parse( "https://api.twitter.com/oauth/authorize" ) 
     http = http_new( u, false )
     http.use_ssl = true
     http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-    res = http.post(u.request_uri, query)
+    res = http.post( u.request_uri, query )
     raise RuntimeError, "HTTP: #{res.code}" if res.code != "200"
     pin = nil
-    lines = res.body.split(/\n/)
+    lines = res.body.split( /\n/ )
     i = 0
     while i < lines.size
       if lines[i] =~ /oauth_pin/
@@ -145,7 +146,8 @@ class Dokan
     end
     File.chmod( 0600, DOKAN_FILE )
   end
-  
+ 
+  public 
   def post( text )
     ret = @access_token.post( TWEET_URL, { :status => text.encode("UTF-8") } )
     raise RuntimeError, "Failed to post with error: HTTP/#{ret.code}" if ret.code != "200"
@@ -171,7 +173,7 @@ opts.parse!( ARGV )
 
 ## option validation
 if opt[:user].nil? and (opt[:default] == true || opt[:auth] == true)
-  puts "Username must be specified!!"
+  print "Username must be specified!!\n"
   exit 1
 end
 
@@ -180,6 +182,6 @@ begin
   dokan = Dokan.new( opt )
   dokan.post( ARGV.first ) if ARGV.size > 0
 rescue
-  print "Error: #{$!.to_s}"
+  print "Error: #{$!.to_s}\n"
   exit 1
 end
