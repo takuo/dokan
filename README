@@ -17,6 +17,7 @@ Windowsの場合、OpenSSL, Zlib のインストール必須 libeay32.dll,ssleay
  ruby.exe dokan.rb -u username "なんたらかんたら" で投稿
  ruby.exe dokan.rb -d -u username で username をデフォルトユーザに設定
  ruby.exe dokan.rb "なんたらかんたら" でデフォルトユーザで投稿
+ ruby.exe dokan.rb -d で現在のデフォルトユーザ名を表示
 
 TVRock での使い方
  録画予約時の投稿

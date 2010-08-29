@@ -167,7 +167,7 @@ opt[:default] = false
 opts = OptionParser.new
 opts.on( "-a", "--auth",nil, "Authentication via OAuth") { opt[:auth] = true }
 opts.on( "-u", "--user=user", String, "Username for Twitter" ) { |v| opt[:user] = v }
-opts.on( "-d", "--default", nil, "Set as default user" ) { |v| opt[:default] = true }
+opts.on( "-d", "--default", nil, "Set as default user, or show current default user" ) { |v| opt[:default] = true }
 opts.version = DOKAN_VERSION
 opts.program_name = "dokan"
 opts.parse!( ARGV )
