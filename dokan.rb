@@ -1,4 +1,4 @@
-#!/usr/bin/ruby
+#!/usr/bin/ruby1.9.1
 # -*- coding: utf-8 -*-
 #
 # The Dokan is a command line Twitter poster.
@@ -55,10 +55,11 @@ class Dokan
   private
   def loadconf( consumer )
     @db.transaction do
+      @db[:tokens] = Hash.new unless @db.root?( :tokens )
       @user = @db[:default_user] unless @user
       raise RuntimeError, "Default user was not found!" unless @user
-      token = @db[:tokens][@user][:access_token]
-      secret = @db[:tokens][@user][:access_token_secret]
+      token = @db[:tokens][@user][:access_token] if @db[:tokens][@user]
+      secret = @db[:tokens][@user][:access_token_secret] if @db[:tokens][@user]
       if token and secret
         @access_token = OAuth::AccessToken.new( consumer, token, secret )
       end
