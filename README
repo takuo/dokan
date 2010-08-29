@@ -1,25 +1,27 @@
 
- The Dokan is a command line Twitter poster.
+The Dokan is a command line Twitter poster.
 
- Copyright (c) 2010 Takuo Kitame <kitame@debian.org>
- License: Ruby's
+Copyright (c) 2010 Takuo Kitame <kitame@debian.org>
+License: Ruby's
 
- Ruby 1.9.2 以上用 encodeのとこいじれば1.8でも動く
+Ruby 1.9.2 以上用 
+ ※ encode のとこいじれば1.8でも動く
 
-  Windowsの場合、OpenSSL, Zlib のインストール必須 libeay32.dll,ssleay32.dll,zlib.dllを ruby.exeと同じ場所に置く
+Windowsの場合、OpenSSL, Zlib のインストール必須 libeay32.dll,ssleay32.dll,zlib.dllなどを ruby.exeと同じ場所に置く
 
-  必要な拡張ライブラリをインストール
+必要な拡張ライブラリをインストール
   gem install --no-ri --no-rdoc ruby-hmac oauth
 
+使い方
  ruby.exe dokan.rb -a -u username でoauth認証 (1回だけでいい) (最初のアカウント設定がデフォルトユーザになる)
  ruby.exe dokan.rb -u username "なんたらかんたら" で投稿
  ruby.exe dokan.rb -d -u username で username をデフォルトユーザに設定
  ruby.exe dokan.rb "なんたらかんたら" でデフォルトユーザで投稿
 
- TVRock での使い方
+TVRock での使い方
  録画予約時の投稿
- CR:"D:ruby\bin\ruby.exe" "d:\dokan\dokan.rb" "録画予約 [%j %l-%k] %5「%d」 #%g"
+ CR:"D:ruby\bin\ruby.exe" "d:\dokan\dokan.rb" "録画予約 [%j %k-%l] %5「%d」 #%g"
  録画開始時の投稿
- CS:"D:ruby\bin\ruby.exe" "d:\dokan\dokan.rb" "[%h]録画開始 [%j %k-%j] %5「%d」 #%g"
+ CS:"D:ruby\bin\ruby.exe" "d:\dokan\dokan.rb" "[%h]録画開始 [%j %k～%l] %5「%d」 #%g"
  録画終了時の投稿
- CE:"D:ruby\bin\ruby.exe" "d:\dokan\dokan.rb" "[%h]録画予約 [%j %k-%j] %5「%d」 #%g"
+ CE:"D:ruby\bin\ruby.exe" "d:\dokan\dokan.rb" "[%h]録画予約 [%j %k～%l] %5「%d」 #%g"
