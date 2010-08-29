@@ -48,13 +48,13 @@ class Dokan
     @db = PStore.new( DOKAN_FILE )
     auth( consumer, opt[:user] ) if opt[:auth] and opt[:user]
     default( opt[:user] ) if opt[:default] and opt[:user]
-    loadconf( consumer )
     @user = opt[:user] if opt[:user]
+    loadconf( consumer )
   end
 
   def loadconf( consumer )
     @db.transaction do
-      @user = @db[:default_user]
+      @user = @db[:default_user] unless @user
       raise RuntimeError, "Default user was not found!" unless @user
       token = @db[:tokens][@user][:access_token]
       secret = @db[:tokens][@user][:access_token_secret]
