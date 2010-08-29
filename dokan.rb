@@ -49,6 +49,7 @@ class Dokan
     auth( consumer, opt[:user] ) if opt[:auth] and opt[:user]
     default( opt[:user] ) if opt[:default] and opt[:user]
     loadconf( consumer )
+    @user = opt[:user] if opt[:user]
   end
 
   def loadconf( consumer )
