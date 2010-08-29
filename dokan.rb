@@ -47,7 +47,7 @@ class Dokan
     consumer = OAuth::Consumer.new( CONSUMER_KEY, CONSUMER_SEC, params )
     @db = PStore.new( DOKAN_FILE )
     auth( consumer, opt[:user] ) if opt[:auth] and opt[:user]
-    default( opt[:user] ) if opt[:default] and opt[:user]
+    default( opt[:user] ) if opt[:default]
     @user = opt[:user] if opt[:user]
     loadconf( consumer )
   end
@@ -66,12 +66,12 @@ class Dokan
     end
   end
   
-  def default(user)
+  def default( user = nil )
     @db.transaction do
-      @db[:default_user] = user
+      @db[:default_user] = user if user
+      @user = @db[:default_user]
     end
-    @user = user
-    print "#{@user} has been set as Default user.\n"
+    print "Current default user is: #{@user}\n"
   end
 
   # proxy is not implement yet
@@ -173,7 +173,7 @@ opts.program_name = "dokan"
 opts.parse!( ARGV )
 
 ## option validation
-if opt[:user].nil? and (opt[:default] == true || opt[:auth] == true)
+if opt[:user].nil? and opt[:auth] == true
   print "Username must be specified!!\n"
   exit 1
 end
