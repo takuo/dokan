@@ -1,0 +1,62 @@
+Dokan
+=====
+
+The Dokan is a command line Twitter poster.
+
+Copyright (c) 2010 Takuo Kitame &lt;kitame@debian.org&gt;
+License: Ruby's
+
+動作環境
+--------
+
+Ruby 1.9 以上用
+※ encode のとこいじれば1.8でも動く
+
+Windowsの場合、OpenSSL, Zlib のインストール必須 libeay32.dll,ssleay32.dll,zlib.dllなどを ruby.exeと同じ場所に置く
+
+必要な拡張ライブラリをインストール
+
+    gem install --no-ri --no-rdoc ruby-hmac oauth
+
+使い方
+------
+
+OAuth認証(必須)
+最初に認証成功したアカウントがデフォルトユーザに設定される
+
+    ruby dokan.rb -a -u username
+
+ユーザ名を指定して投稿する
+
+    ruby dokan.rb -u username "なんたらかんたら"
+
+デフォルトユーザで投稿する
+
+    ruby dokan.rb "なんたらかんたら"
+
+デフォルトユーザを変更する
+
+    ruby dokan.rb -d -u username
+
+デフォルトユーザを確認する
+
+    ruby.exe dokan.rb -d
+
+
+TVRock での使い方
+----------------
+
+録画予約時の投稿
+
+    CR:"D:ruby\bin\ruby.exe" "d:\dokan\dokan.rb" "録画予約 [%j %k-%l] %5「%d」 #%g"
+
+録画開始時の投稿
+
+    CS:"D:ruby\bin\ruby.exe" "d:\dokan\dokan.rb" "[%h]録画開始 [%j %k～%l] %5「%d」 #%g"
+
+録画終了時の投稿
+
+    CE:"D:ruby\bin\ruby.exe" "d:\dokan\dokan.rb" "[%h]録画予約 [%j %k～%l] %5「%d」 #%g"
+
+サンプル
+http://twitter.com/ematikrock
