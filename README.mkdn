@@ -21,7 +21,7 @@ Windowsの場合、OpenSSL, Zlib のインストール必須 libeay32.dll,ssleay
 使い方
 ------
 
-OAuth認証(必須)
+OAuth認証(必須)  
 最初に認証成功したアカウントがデフォルトユーザに設定される
 
     ruby dokan.rb -a -u username
@@ -58,5 +58,5 @@ TVRock での使い方
 
     CE:"D:ruby\bin\ruby.exe" "d:\dokan\dokan.rb" "[%h]録画予約 [%j %k～%l] %5「%d」 #%g"
 
-サンプル
+サンプル  
 http://twitter.com/ematikrock
