@@ -3,13 +3,13 @@ Dokan
 
 The Dokan is a command line Twitter poster.
 
-Copyright (c) 2010 Takuo Kitame &lt;kitame@debian.org&gt;
+Copyright (c) 2010 Takuo Kitame &lt;kitame@debian.org&gt;  
 License: Ruby's
 
 動作環境
 --------
 
-Ruby 1.9 以上用
+Ruby 1.9 以上用  
 ※ encode のとこいじれば1.8でも動く
 
 Windowsの場合、OpenSSL, Zlib のインストール必須 libeay32.dll,ssleay32.dll,zlib.dllなどを ruby.exeと同じ場所に置く
