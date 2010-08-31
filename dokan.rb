@@ -10,6 +10,7 @@
 require 'oauth'
 require 'pstore'
 require 'optparse'
+require 'json'
 
 DOKAN_VERSION = "1.1"
 
@@ -39,6 +40,9 @@ class Dokan
   CONSUMER_KEY="Lk9wVIWctgYK5eWwC9Texg"
   CONSUMER_SEC="ZlR9oVd03qlhqnKvEO7QqN7rbjhEXptKUfqzOu3bY4"
   TWEET_URL = "https://api.twitter.com/1/statuses/update.json"
+  BITLY_API = "http://api.bit.ly/v3/shorten?"
+  BITLY_LOGIN = "dokan"
+  BITLY_KEY   = "R_885043b52ca063cc775c95acc9594a5e"
   DOKAN_FILE = File.join( ENV['HOME'], ".dokanrc.db" )
 
   # new
@@ -120,9 +124,7 @@ class Dokan
       end
       i+=1;
     end
-    if pin
-      token = rt.get_access_token( :oauth_verifier => pin ) 
-    end 
+    token = rt.get_access_token( :oauth_verifier => pin ) if pin
     return token
   end
 
@@ -145,10 +147,33 @@ class Dokan
     end
     File.chmod( 0600, DOKAN_FILE )
   end
+
+  def bitly( url )
+    encoded = URI::encode( url, URI::REGEXP::PATTERN::RESERVED + "#" )
+    params = {
+      "login" => BITLY_LOGIN,
+      "apiKey" => BITLY_KEY,
+      "longUrl" => encoded
+    }.map do |k, v| "#{k}=#{v}" end.join( "&" )
+    u = URI::parse( BITLY_API + params )
+    http = Net::HTTP.new( u.host )
+    res = http.get( u.request_uri )
+    if res.code == "200"
+      json = JSON::parse( res.body )
+      return json['data']['url'] if json['status_code'] == 200
+    end
+    url
+  end
  
   public 
-  def post( text )
-    text.encode!( "UTF-8" ) unless text.encoding == Encoding::UTF_8
+  def post( source )
+    text = source.dup
+    text = text.encode( "UTF-8" ) unless text.encoding == Encoding::UTF_8
+    uris = URI::extract( text )
+    uris.each do |uri|
+      suri = bitly( uri )
+      text.gsub!( uri, suri )
+    end
     count = 0
     begin
       ret = @access_token.post( TWEET_URL, { :status => text } )
