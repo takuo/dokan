@@ -42,6 +42,13 @@ OAuth認証(必須)
 
     ruby.exe dokan.rb -d
 
+標準入力から投稿する
+
+    echo "なんたらかんたら" | ruby dokan.rb
+
+    ruby dokan.rb
+    なんたらかんたら
+    ^D
 
 TVRock での使い方
 ----------------

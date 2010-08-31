@@ -11,7 +11,7 @@ require 'oauth'
 require 'pstore'
 require 'optparse'
 
-DOKAN_VERSION = "1.0"
+DOKAN_VERSION = "1.1"
 
 # oAuth fix for >= 1.9.0
 if RUBY_VERSION >= "1.9.0"
@@ -136,8 +136,6 @@ class Dokan
 
     @access_token = get_access_token( consumer, user, pass )
     raise RuntimeError, "OAuth authentication was failed!" unless @access_token
-    # puts "ACCESS_TOKEN=\"#{at.token}\""
-    # puts "ACCESS_TOKEN_SEC=\"#{at.secret}\""
 
     @db.transaction do
       @db[:default_user] = user unless @db.root?( :default_user )
@@ -150,8 +148,19 @@ class Dokan
  
   public 
   def post( text )
-    ret = @access_token.post( TWEET_URL, { :status => text.encode("UTF-8") } )
-    raise RuntimeError, "Failed to post with error: HTTP/#{ret.code}" if ret.code != "200"
+    text.encode!( "UTF-8" ) unless text.encoding == Encoding::UTF_8
+    count = 0
+    begin
+      ret = @access_token.post( TWEET_URL, { :status => text } )
+      raise RuntimeError, "Failed to post with error: HTTP/#{ret.code}" if ret.code != "200"
+    rescue
+      count += 1
+      if count < 5
+        sleep 3
+        retry
+      end
+      raise $!
+    end
   end
   
 end
@@ -181,7 +190,12 @@ end
 ## run program
 begin
   dokan = Dokan.new( opt )
-  dokan.post( ARGV.first ) if ARGV.size > 0
+  if ARGV.size > 0
+    dokan.post( ARGV.first )
+  elsif !opt[:default] and !opt[:auth]
+    text = STDIN.read
+    dokan.post( text ) if text.size > 0
+  end
 rescue
   print "Error: #{$!.to_s}\n"
   exit 1
