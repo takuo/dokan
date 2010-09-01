@@ -11,6 +11,7 @@ require 'oauth'
 require 'pstore'
 require 'optparse'
 require 'json'
+require 'readline'
 
 DOKAN_VERSION = "1.1"
 
@@ -149,6 +150,7 @@ class Dokan
   end
 
   def bitly( url )
+    return url if url.size <= 21
     encoded = URI::encode( url, URI::REGEXP::PATTERN::RESERVED + "#" )
     params = {
       "login" => BITLY_LOGIN,
@@ -185,7 +187,32 @@ class Dokan
         retry
       end
       raise $!
+    ensure
+      return ret
     end
+  end
+
+  def post_edit
+    text = ""
+    prompt = "> "
+    while line = Readline.readline( prompt )
+      break if /^$/ =~ line
+      text << line
+      prompt = ""
+    end
+    if text.empty?
+      print "\n>> Canceld.\n"
+      return
+    end
+    print ">> Posting... "
+    ret = post( text )
+    return if ret.nil?
+    print " HTTP:#{ret.code} #{ret.message}\n"
+  end
+
+  def pipe
+    text = STDIN.read
+    post( text ) unless text.empty?
   end
   
 end
@@ -194,14 +221,16 @@ end
 
 ## command line options
 opt = Hash.new
-opt[:auth] = false
-opt[:user] = nil
+opt[:auth]    = false
+opt[:user]    = nil
 opt[:default] = false
+opt[:extreme] = false
 
 opts = OptionParser.new
 opts.on( "-a", "--auth",nil, "Authentication via OAuth") { opt[:auth] = true }
 opts.on( "-u", "--user=user", String, "Username for Twitter" ) { |v| opt[:user] = v }
 opts.on( "-d", "--default", nil, "Set as default user, or show current default user" ) { |v| opt[:default] = true }
+opts.on( "-e", "--extreme", nil, "Enable extreme mode. Don't use with command line pipe.") { opt[:extreme] = true }
 opts.version = DOKAN_VERSION
 opts.program_name = "dokan"
 opts.parse!( ARGV )
@@ -212,14 +241,29 @@ if opt[:user].nil? and opt[:auth] == true
   exit 1
 end
 
+Signal.trap(:INT) {
+  exit
+}
+Signal.trap(:TERM) {
+  exit
+}
+
 ## run program
 begin
   dokan = Dokan.new( opt )
   if ARGV.size > 0
     dokan.post( ARGV.first )
-  elsif !opt[:default] and !opt[:auth]
-    text = STDIN.read
-    dokan.post( text ) if text.size > 0
+  elsif opt[:default] or opt[:auth]
+    exit
+  elsif opt[:extreme] and STDIN.tty?
+    print ">> Extreme mode is enabled. Post with empty line or EOF, exit with ^C.\n"
+    loop do
+      dokan.post_edit
+    end
+  elsif STDIN.tty?
+    dokan.post_edit
+  else
+    dokan.pipe
   end
 rescue
   print "Error: #{$!.to_s}\n"
