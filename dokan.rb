@@ -1,4 +1,4 @@
-#!/usr/bin/ruby1.9.1
+#!/usr/bin/ruby
 # -*- coding: utf-8 -*-
 #
 # The Dokan is a command line Twitter poster.
@@ -13,7 +13,7 @@ require 'optparse'
 require 'json'
 require 'readline'
 
-DOKAN_VERSION = "1.1"
+DOKAN_VERSION = "2.0"
 
 # oAuth fix for >= 1.9.0
 if RUBY_VERSION >= "1.9.0"
