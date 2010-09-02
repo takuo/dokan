@@ -234,6 +234,20 @@ class Dokan
     post( text ) unless text.empty?
   end
 
+  def unescape( text )
+    text.gsub( /&(amp|quot|gt|lt);/u ) do
+      match = $1.dup
+      case match
+      when 'amp'  then '&'
+      when 'quot' then '"'
+      when 'gt'   then '>'
+      when 'lt'   then '<'
+      else
+        "&#{match};"
+      end
+    end unless text.nil? || text.empty?
+  end
+
   def stream
     puts "Streaming."
     u = URI::parse( STREAM_URL )
@@ -247,13 +261,22 @@ class Dokan
           json = JSON::parse( line ) rescue next
           if json['user'] and json['text']
             time = Time.parse( json['created_at'] ).strftime("%H:%M:%S")
+            source = json['source'].gsub(/<[^>]+>/, '')
             if json['retweeted_status']
-              rttime = Time.parse( json['retweeted_status']['created_at'] ).strftime("%H:%M:%S")
-              puts "@#{json['retweeted_status']['user']['screen_name']} at #{rttime} (RT by @#{json['user']['screen_name']} at #{time})"
-              puts json['retweeted_status']['text']
+              rtsource = json['retweeted_status']['source'].gsub(/<[^>]+>/, '')
+              rttime = Time.parse( json['retweeted_status']['created_at'] )
+              now = Time.now
+              if rttime.year != now.year && rttime.month != now.month && rttime.day != now.day
+                timestr = rttime.strftime("%m/%d %H:%M:%S")
+              else 
+                timestr = rttime.strftime("%H:%M:%S")
+              end
+              puts "[@#{json['retweeted_status']['user']['screen_name']} at #{timestr} from #{source}]"
+              puts unescape( json['retweeted_status']['text'] )
+              puts "   (RT by @#{json['user']['screen_name']} at #{time} from #{source})"
             else
-              puts "@#{json['user']['screen_name']} at #{time.to_s}"
-              puts json['text']
+              puts "[@#{json['user']['screen_name']} at #{time.to_s} from #{source}]"
+              puts unescape( json['text'] )
             end
             puts "-" * 74
           elsif json['event'] == "list_member_removed"
