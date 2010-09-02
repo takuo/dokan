@@ -70,6 +70,7 @@ class Dokan
     default( opt[:user] ) if opt[:default]
     @user = opt[:user] if opt[:user]
     loadconf( consumer )
+    @stalker = opt[:stalker]
   end
 
   private
@@ -253,7 +254,7 @@ class Dokan
     u = URI::parse( STREAM_URL )
     http = http_new( u )
     request = Net::HTTP::Post.new( u.request_uri )
-    #request.set_form_data( { "replies" => "all" } )
+    request.set_form_data( { "replies" => "all" } ) if @stalker
     request.oauth!( http, @consumer, @access )
     begin
       http.request( request ) do |res|
@@ -306,6 +307,7 @@ opt[:user]    = nil
 opt[:default] = false
 opt[:extreme] = false
 opt[:stream]  = false
+opt[:stalker] = false
 
 opts = OptionParser.new
 opts.on( "-a", "--auth",nil, "Authentication via OAuth") { opt[:auth] = true }
@@ -313,6 +315,7 @@ opts.on( "-u", "--user=user", String, "Username for Twitter" ) { |v| opt[:user] 
 opts.on( "-d", "--default", nil, "Set as default user, or show current default user" ) { |v| opt[:default] = true }
 opts.on( "-e", "--extreme", nil, "Enable extreme mode. Don't use with command line pipe.") { opt[:extreme] = true }
 opts.on( "-s", "--stream", nil, "Get timeline via user stream" ) { opt[:stream] = true }
+opts.on( "-x", "--stalker", nil, "Stalking mode. All replies will be shown on stream.") { opt[:stalker] = true }
 opts.version = DOKAN_VERSION
 opts.program_name = "dokan"
 opts.parse!( ARGV )
