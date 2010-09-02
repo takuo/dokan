@@ -7,6 +7,7 @@
 # License: Ruby's
 #
 #
+require 'time'
 require 'oauth'
 require 'pstore'
 require 'optparse'
@@ -245,7 +246,15 @@ class Dokan
         res.each_line( "\r\n" ) do |line|
           json = JSON::parse( line ) rescue next
           if json['user'] and json['text']
-            puts "@#{json['user']['screen_name']}: #{json['text']}"
+            time = Time.parse( json['created_at'] ).strftime("%H:%M:%S")
+            if json['retweeted_status']
+              rttime = Time.parse( json['retweeted_status']['created_at'] ).strftime("%H:%M:%S")
+              puts "@#{json['retweeted_status']['user']['screen_name']} at #{rttime} (RT by @#{json['user']['screen_name']} at #{time})"
+              puts json['retweeted_status']['text']
+            else
+              puts "@#{json['user']['screen_name']} at #{time.to_s}"
+              puts json['text']
+            end
             puts "-" * 74
           elsif json['event'] == "list_member_removed"
             puts "** Removed from: #{json['target_object']['full_name']}"
