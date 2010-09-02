@@ -36,11 +36,23 @@ if RUBY_VERSION >= "1.9.0"
   end
 end
 
+module Net
+  class HTTPResponse
+    def each_line( rs = "\n" )
+      stream_check
+      while line = @socket.readuntil( rs )
+        yield line
+      end
+      self
+    end
+  end
+end
 
 class Dokan
   CONSUMER_KEY="Lk9wVIWctgYK5eWwC9Texg"
   CONSUMER_SEC="ZlR9oVd03qlhqnKvEO7QqN7rbjhEXptKUfqzOu3bY4"
   TWEET_URL = "https://api.twitter.com/1/statuses/update.json"
+  STREAM_URL = "https://betastream.twitter.com/2b/user.json"
   BITLY_API = "http://api.bit.ly/v3/shorten?"
   BITLY_LOGIN = "dokan"
   BITLY_KEY   = "R_885043b52ca063cc775c95acc9594a5e"
@@ -50,6 +62,7 @@ class Dokan
   def initialize( opt )
     params = { :site => "https://api.twitter.com" }
     consumer = OAuth::Consumer.new( CONSUMER_KEY, CONSUMER_SEC, params )
+    @consumer = consumer
     @db = PStore.new( DOKAN_FILE )
     auth( consumer, opt[:user] ) if opt[:auth] and opt[:user]
     default( opt[:user] ) if opt[:default]
@@ -67,6 +80,7 @@ class Dokan
       secret = @db[:tokens][@user][:access_token_secret] if @db[:tokens][@user]
       if token and secret
         @access_token = OAuth::AccessToken.new( consumer, token, secret )
+        @access = OAuth::Token.new( token, secret )
       end
     end
   end
@@ -214,7 +228,37 @@ class Dokan
     text = STDIN.read
     post( text ) unless text.empty?
   end
-  
+
+  def stream
+    puts "Streaming."
+    u = URI::parse( STREAM_URL )
+    http = Net::HTTP.start( u.host, u.port )
+    request = Net::HTTP::Post.new( u.request_uri )
+    #request.set_form_data( { "replies" => "all" } )
+    request.oauth!( http, @consumer, @access )
+    begin
+      http.request( request ) do |res|
+        res.each_line( "\r\n" ) do |line|
+          json = JSON::parse( line ) rescue next
+          if json['user'] and json['text']
+            puts "@#{json['user']['screen_name']}: #{json['text']}"
+            puts "-" * 74
+          elsif json['event'] == "list_member_removed"
+            puts "** Removed from: #{json['target_object']['full_name']}"
+            puts "-" * 74
+          elsif json['event'] == "list_member_added"
+            puts "** Added to: #{json['target_object']['full_name']}"
+            puts "-" * 74
+          else
+            puts "** Unhandled event: #{json['event']}"
+            puts "-" * 74
+          end
+        end
+      end
+    ensure
+      http.finish
+    end
+  end
 end
 
 ## __MAIN__
@@ -225,12 +269,14 @@ opt[:auth]    = false
 opt[:user]    = nil
 opt[:default] = false
 opt[:extreme] = false
+opt[:stream]  = false
 
 opts = OptionParser.new
 opts.on( "-a", "--auth",nil, "Authentication via OAuth") { opt[:auth] = true }
 opts.on( "-u", "--user=user", String, "Username for Twitter" ) { |v| opt[:user] = v }
 opts.on( "-d", "--default", nil, "Set as default user, or show current default user" ) { |v| opt[:default] = true }
 opts.on( "-e", "--extreme", nil, "Enable extreme mode. Don't use with command line pipe.") { opt[:extreme] = true }
+opts.on( "-s", "--stream", nil, "Get timeline via user stream" ) { opt[:stream] = true }
 opts.version = DOKAN_VERSION
 opts.program_name = "dokan"
 opts.parse!( ARGV )
@@ -251,6 +297,10 @@ Signal.trap(:TERM) {
 ## run program
 begin
   dokan = Dokan.new( opt )
+  if opt[:stream]
+    dokan.stream
+    exit
+  end
   if ARGV.size > 0
     dokan.post( ARGV.first )
   elsif opt[:default] or opt[:auth]
