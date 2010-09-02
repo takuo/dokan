@@ -12,11 +12,12 @@ require 'pstore'
 require 'optparse'
 require 'json'
 require 'readline'
+require 'hmac'
 
 DOKAN_VERSION = "2.0"
 
 # oAuth fix for >= 1.9.0
-if RUBY_VERSION >= "1.9.0"
+if RUBY_VERSION >= "1.9.0" and HMAC::VERSION < "0.4.0"
   module HMAC
     class Base
       def set_key(key)
@@ -95,7 +96,12 @@ class Dokan
 
   # proxy is not implement yet
   def http_new( uri, use_proxy = true )
-    Net::HTTP.new( uri.host, uri.port )
+    http = Net::HTTP.new( uri.host, uri.port )
+    if uri.scheme == 'https'
+      http.use_ssl = true
+      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    end
+    http
   end
 
   def get_access_token( consumer, user, pass )
@@ -125,8 +131,6 @@ class Dokan
           "submit=Allow" ].join( "&" )
     u = URI::parse( "https://api.twitter.com/oauth/authorize" ) 
     http = http_new( u, false )
-    http.use_ssl = true
-    http.verify_mode = OpenSSL::SSL::VERIFY_NONE
     res = http.post( u.request_uri, query )
     raise RuntimeError, "HTTP: #{res.code}" if res.code != "200"
     pin = nil
@@ -232,7 +236,7 @@ class Dokan
   def stream
     puts "Streaming."
     u = URI::parse( STREAM_URL )
-    http = Net::HTTP.start( u.host, u.port )
+    http = http_new( u )
     request = Net::HTTP::Post.new( u.request_uri )
     #request.set_form_data( { "replies" => "all" } )
     request.oauth!( http, @consumer, @access )
