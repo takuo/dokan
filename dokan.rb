@@ -84,6 +84,7 @@ class Dokan
     if @access_token.nil? and ! opt[:auth] and opt[:user]
       auth( consumer, opt[:user] )
     end
+    @tags = opt[:tags]
   end
 
   private
@@ -213,6 +214,7 @@ class Dokan
       suri = bitly( uri )
       text.gsub!( uri, suri )
     end
+    text += @tags.map do |x| " ##{x}" end.join
     count = 0
     begin
       ret = @access_token.post( TWEET_URL, { :status => text } )
@@ -231,7 +233,11 @@ class Dokan
 
   def post_edit
     text = ""
-    prompt = "> "
+    if @tags.size > 0
+      prompt = @tags.map do |x| "##{x}" end.join( ',' ) + "> "
+    else
+      prompt = "> "
+    end
     while line = Readline.readline( prompt )
       break if /^$/ =~ line
       text << line
@@ -325,12 +331,14 @@ opt[:default] = false
 opt[:extreme] = false
 opt[:stream]  = false
 opt[:stalker] = false
+opt[:tags]    = Array.new
 
 opts = OptionParser.new
 opts.on( "-a", "--auth",nil, "Authentication via OAuth") { opt[:auth] = true }
 opts.on( "-u", "--user=user", String, "Username for Twitter" ) { |v| opt[:user] = v }
 opts.on( "-d", "--default", nil, "Set as default user, or show current default user" ) { |v| opt[:default] = true }
 opts.on( "-e", "--extreme", nil, "Enable extreme mode. Don't use with command line pipe.") { opt[:extreme] = true }
+opts.on( "-t", "--tags=tag,tag...", Array, "Insert hashtag automatically. Comma-Separated values. (w/o `#')" ) { |v| opt[:tags] = v }
 opts.on( "-s", "--stream", nil, "Get timeline via user stream" ) { opt[:stream] = true }
 opts.on( "-x", "--stalker", nil, "Stalking mode. All replies will be shown on stream.") { opt[:stalker] = true }
 opts.version = DOKAN_VERSION
