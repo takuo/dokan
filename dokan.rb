@@ -81,6 +81,9 @@ class Dokan
     @user = opt[:user] if opt[:user]
     loadconf( consumer )
     @stalker = opt[:stalker]
+    if @access_token.nil? and ! opt[:auth] and opt[:user]
+      auth( consumer, opt[:user] )
+    end
   end
 
   private
