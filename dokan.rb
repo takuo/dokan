@@ -20,8 +20,7 @@ require 'json'
 require 'readline'
 require 'hmac'
 
-
-DOKAN_VERSION = "2.1"
+DOKAN_VERSION = "3.0"
 
 if RUBY_VERSION < "1.9.0"
   require 'kconv'
