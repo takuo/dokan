@@ -8,14 +8,24 @@
 #
 #
 require 'time'
-require 'oauth'
+begin
+  require 'oauth'
+rescue LoadError
+  require 'rubygems'
+  require 'oauth'
+end
 require 'pstore'
 require 'optparse'
 require 'json'
 require 'readline'
 require 'hmac'
 
+
 DOKAN_VERSION = "2.0"
+
+if RUBY_VERSION < "1.9.0"
+  require 'kconv'
+end
 
 # oAuth fix for >= 1.9.0
 if RUBY_VERSION >= "1.9.0" and HMAC::VERSION < "0.4.0"
@@ -190,7 +200,11 @@ class Dokan
   public 
   def post( source )
     text = source.dup
-    text = text.encode( "UTF-8" ) unless text.encoding == Encoding::UTF_8
+    if RUBY_VERSION >= "1.9.0"
+      text = text.encode( "UTF-8" ) unless text.encoding == Encoding::UTF_8
+    else
+      text = Kconv::toutf8( text )
+    end
     uris = URI::extract( text )
     uris.each do |uri|
       suri = bitly( uri )
