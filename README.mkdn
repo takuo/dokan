@@ -9,8 +9,7 @@ License: Ruby's
 動作環境
 --------
 
-Ruby 1.9 以上用  
-※ encode のとこいじれば1.8でも動く
+Ruby 1.8/1.9 以上用  
 
 Windowsの場合、OpenSSL, Zlib, Readline のインストール必須  
 libeay32.dll,ssleay32.dll,zlib.dll,readline.dll などを ruby.exeと同じ場所に置く
