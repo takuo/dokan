@@ -21,7 +21,7 @@ require 'readline'
 require 'hmac'
 
 
-DOKAN_VERSION = "2.0"
+DOKAN_VERSION = "2.1"
 
 if RUBY_VERSION < "1.9.0"
   require 'kconv'
