@@ -21,7 +21,7 @@ require 'readline'
 require 'hmac'
 require 'nkf'
 
-DOKAN_VERSION = "3.1"
+DOKAN_VERSION = "3.2"
 
 # oAuth fix for >= 1.9.0
 if RUBY_VERSION >= "1.9.0" and HMAC::VERSION < "0.4.0"
@@ -60,7 +60,7 @@ class Dokan
   CONSUMER_KEY="Lk9wVIWctgYK5eWwC9Texg"
   CONSUMER_SEC="ZlR9oVd03qlhqnKvEO7QqN7rbjhEXptKUfqzOu3bY4"
   TWEET_URL = "https://api.twitter.com/1/statuses/update.json"
-  STREAM_URL = "https://betastream.twitter.com/2b/user.json"
+  STREAM_URL = "https://userstream.twitter.com/2/user.json"
   BITLY_API = "http://api.bit.ly/v3/shorten?"
   BITLY_LOGIN = "dokan"
   BITLY_KEY   = "R_885043b52ca063cc775c95acc9594a5e"
