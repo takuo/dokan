@@ -56,6 +56,18 @@ OAuth認証(必須)
     #tag1,#tag2> なんたらかんたら
     ^D
 
+ホームタイムラインを垂れ流す
+
+    ruby dokan.rb -s
+
+タイムラインをreplies=all付きで垂れ流す
+
+    ruby dokan.rb -s -x
+
+ヘルプ
+
+    ruby dokan.rb -h
+
 
 TVRock での使い方
 ----------------
