@@ -67,7 +67,13 @@ OAuth認証(必須)
 ヘルプ
 
     ruby dokan.rb -h
-
+    Usage: dokan [options]
+        -a, --auth                       Authentication via OAuth
+        -u, --user=user                  Username for Twitter
+        -d, --default                    Set as default user, or show current default user
+        -e, --extreme                    Enable extreme mode. Don't use with command line pipe.
+        -t, --tags=tag,tag...            Insert hashtag automatically. Comma-Separated values. (w/o `#')
+        -s, --stream                     Get timeline via user stream
 
 TVRock での使い方
 ----------------
