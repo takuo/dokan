@@ -287,7 +287,7 @@ class Dokan
               else 
                 timestr = rttime.strftime("%H:%M:%S")
               end
-              puts "[@#{json['retweeted_status']['user']['screen_name']} at #{timestr} from #{source}]"
+              puts "[@#{json['retweeted_status']['user']['screen_name']} at #{timestr} from #{rtsource}]"
               puts unescape( json['retweeted_status']['text'] )
               puts "   (RT by @#{json['user']['screen_name']} at #{time} from #{source})"
             else
