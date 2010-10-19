@@ -21,7 +21,7 @@ require 'readline'
 require 'hmac'
 require 'nkf'
 
-DOKAN_VERSION = "3.2"
+DOKAN_VERSION = "4.0"
 
 # oAuth fix for >= 1.9.0
 if RUBY_VERSION >= "1.9.0" and HMAC::VERSION < "0.4.0"
@@ -66,6 +66,17 @@ class Dokan
   BITLY_KEY   = "R_885043b52ca063cc775c95acc9594a5e"
   DOKAN_FILE = File.join( ENV['HOME'], ".dokanrc.db" )
 
+  class Color
+    BLACK   = "30"
+    RED     = "31"
+    GREEN   = "32"
+    YELLOW  = "33"
+    BLUE    = "34"
+    MAGENTA = "35"
+    CYAN    = "36"
+    GRAY    = "37"
+  end
+
   # new
   def initialize( opt )
     params = { :site => "https://api.twitter.com" }
@@ -81,6 +92,7 @@ class Dokan
       auth( consumer, opt[:user] )
     end
     @tags = opt[:tags]
+    @color = opt[:color]
   end
 
   private
@@ -275,6 +287,7 @@ class Dokan
       http.request( request ) do |res|
         res.each_line( "\r\n" ) do |line|
           json = JSON::parse( line ) rescue next
+          entities = json['entities'] 
           if json['user'] and json['text']
             time = Time.parse( json['created_at'] ).strftime("%H:%M:%S")
             source = json['source'].gsub(/<[^>]+>/, '')
@@ -287,12 +300,12 @@ class Dokan
               else 
                 timestr = rttime.strftime("%H:%M:%S")
               end
-              puts "[@#{json['retweeted_status']['user']['screen_name']} at #{timestr} from #{rtsource}]"
-              puts unescape( json['retweeted_status']['text'] )
-              puts "   (RT by @#{json['user']['screen_name']} at #{time} from #{source})"
+              puts "[" + decorate( "#{json['retweeted_status']['user']['screen_name']}", :underline=>true,  :bold=>true, :color => Color::GREEN ) +  " at #{timestr} from #{rtsource}]"
+              puts decorate_text( unescape( json['retweeted_status']['text'] ), entities )
+              puts "   (RT by " + decorate( "@#{json['user']['screen_name']}",  :underline=>true, :color=>  Color::GREEN ) + " at #{time} from #{source})"
             else
-              puts "[@#{json['user']['screen_name']} at #{time.to_s} from #{source}]"
-              puts unescape( json['text'] )
+              puts "[" + decorate( "#{json['user']['screen_name']}", :underline => true, :bold=>true, :color => Color::GREEN )+ " at #{time.to_s} from #{source}]"
+              puts decorate_text( unescape( json['text'] ), entities )
             end
             puts "-" * 74
           elsif json['event'] == "list_member_removed"
@@ -311,6 +324,52 @@ class Dokan
       http.finish
     end
   end
+
+  # experimental
+  def decorate( string, params = {} )
+    return string unless @color
+    reset = "\033[0m"
+    params = { :bold => false, :underline => false, :blink => false, :reverse => false }.update( params )
+    res = "\033["
+    code = []
+    code << "1" if params[:bold]
+    code << "4" if params[:underline]
+    code << "5" if params[:blink]
+    code << "7" if params[:reverse]
+    code << params[:color] if params[:color]
+    res += code.join(";") + "m" + string + reset
+    res
+  end
+
+  def decorate_text( text, ent )
+    res = text
+    if ent
+      ent['user_mentions'].each do |m|
+        u = m['screen_name']
+        if u == @user
+          dec = decorate( "@#{u}", :underline=>true, :color=>Color::RED)
+        else
+          dec = decorate( "@#{u}", :underline=>true )
+        end
+        res.gsub!(/@#{u}/, dec )
+      end
+      ent['urls'].each do |url|
+        u = url['url']
+        dec = decorate( u, :underline => true, :color=>Color::CYAN )
+        res.gsub!(/#{u}/, dec )
+      end
+      ent['hashtags'].each do |h|
+        tag = h['text']
+        dec = decorate( "##{tag}", :color=>Color::YELLOW )
+        res.gsub!(/##{tag}/, dec)
+      end
+    end
+    res.gsub!(/([RQ]T)/, decorate('\1', :bold=>true))
+    return res
+  rescue
+    puts $!
+    return text
+  end
 end
 
 ## __MAIN__
@@ -323,6 +382,7 @@ opt[:default] = false
 opt[:extreme] = false
 opt[:stream]  = false
 opt[:stalker] = false
+opt[:color]   = false
 opt[:tags]    = Array.new
 
 opts = OptionParser.new
@@ -332,6 +392,7 @@ opts.on( "-d", "--default", nil, "Set as default user, or show current default u
 opts.on( "-e", "--extreme", nil, "Enable extreme mode. Don't use with command line pipe.") { opt[:extreme] = true }
 opts.on( "-t", "--tags=tag,tag...", Array, "Insert hashtag automatically. Comma-Separated values. (w/o `#')" ) { |v| opt[:tags] = v }
 opts.on( "-s", "--stream", nil, "Get timeline via user stream" ) { opt[:stream] = true }
+opts.on( "-c", "--color", nil, "Colorize stream text") { opt[:color] = true }
 opts.on( "-x", "--stalker", nil, "Stalking mode. All replies will be shown on stream.") { opt[:stalker] = true }
 opts.version = DOKAN_VERSION
 opts.program_name = "dokan"
