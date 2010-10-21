@@ -61,6 +61,7 @@ class Dokan
   CONSUMER_SEC="ZlR9oVd03qlhqnKvEO7QqN7rbjhEXptKUfqzOu3bY4"
   TWEET_URL = "https://api.twitter.com/1/statuses/update.json"
   STREAM_URL = "https://userstream.twitter.com/2/user.json"
+  GOOGL_SHORTEN = "http://goo.gl/api/shorten"
   BITLY_API = "http://api.bit.ly/v3/shorten?"
   BITLY_LOGIN = "dokan"
   BITLY_KEY   = "R_885043b52ca063cc775c95acc9594a5e"
@@ -191,6 +192,7 @@ class Dokan
     File.chmod( 0600, DOKAN_FILE )
   end
 
+=begin
   def bitly( url )
     return url if url.size <= 21
     encoded = URI::encode( url, URI::REGEXP::PATTERN::RESERVED + "#" )
@@ -208,14 +210,25 @@ class Dokan
     end
     url
   end
- 
+=end
+  def googl( url )
+    return url unless url.size > 20
+    res = Net::HTTP.post_form( URI::parse( GOOGL_SHORTEN ), { :url => url} )
+    if res.code == "200" or res.code == "201"
+      json = JSON::parse( res.body )
+      return json['short_url']
+    end
+    url
+  end
+
   public 
   def post( source )
     text = source.dup
     text = NKF::nkf('-w', text )
     uris = URI::extract( text )
     uris.each do |uri|
-      suri = bitly( uri )
+      # suri = bitly( uri )
+      suri = googl( uri )
       text.gsub!( uri, suri )
     end
     text += @tags.map do |x| " ##{x}" end.join
