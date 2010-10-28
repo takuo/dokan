@@ -77,7 +77,7 @@ OAuth認証(必須)
         -e, --extreme                    Enable extreme mode. Don't use with command line pipe.
         -t, --tags=tag,tag...            Insert hashtag automatically. Comma-Separated values. (w/o `#')
         -s, --stream                     Get timeline via user stream
-        -im --ignore=word,word...        Ignore keywords (NG word)
+        -i, --ignore=word,word...        Ignore keywords (NG word)
         -c, --color                      Colorize stream text
 
 
