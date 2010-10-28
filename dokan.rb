@@ -56,6 +56,13 @@ module Net
   end
 end
 
+class Time
+  def today?
+    today = Time.now
+    self.year == today.year && self.month == today.month && self.day == today.day
+  end
+end
+
 class Dokan
   CONSUMER_KEY="Lk9wVIWctgYK5eWwC9Texg"
   CONSUMER_SEC="ZlR9oVd03qlhqnKvEO7QqN7rbjhEXptKUfqzOu3bY4"
@@ -94,6 +101,8 @@ class Dokan
     end
     @tags = opt[:tags]
     @color = opt[:color]
+    @ignores = Regexp.new( opt[:ignores].join("|"), Regexp::IGNORECASE ) if opt[:ignores].size > 0
+    @friends = []
   end
 
   private
@@ -192,25 +201,6 @@ class Dokan
     File.chmod( 0600, DOKAN_FILE )
   end
 
-=begin
-  def bitly( url )
-    return url if url.size <= 21
-    encoded = URI::encode( url, URI::REGEXP::PATTERN::RESERVED + "#" )
-    params = {
-      "login" => BITLY_LOGIN,
-      "apiKey" => BITLY_KEY,
-      "longUrl" => encoded
-    }.map do |k, v| "#{k}=#{v}" end.join( "&" )
-    u = URI::parse( BITLY_API + params )
-    http = Net::HTTP.new( u.host )
-    res = http.get( u.request_uri )
-    if res.code == "200"
-      json = JSON::parse( res.body )
-      return json['data']['url'] if json['status_code'] == 200
-    end
-    url
-  end
-=end
   def googl( url )
     return url unless url.size > 20
     res = Net::HTTP.post_form( URI::parse( GOOGL_SHORTEN ), { :url => url} )
@@ -227,7 +217,6 @@ class Dokan
     text = NKF::nkf('-w', text )
     uris = URI::extract( text )
     uris.each do |uri|
-      # suri = bitly( uri )
       suri = googl( uri )
       text.gsub!( uri, suri )
     end
@@ -289,8 +278,44 @@ class Dokan
     end unless text.nil? || text.empty?
   end
 
+  def format_text( tweet, rtby = nil )
+    entities = tweet['entities']
+    user = tweet['user']
+    text = ""
+    time = Time.parse( tweet['created_at'] )
+    source = tweet['source'].gsub(/<[^>]+>/, '')
+
+    if tweet['retweeted_status']
+      rt = "  (RT by " + decorate( "@#{user['screen_name']}",  :underline=>true, :color=>  Color::GREEN ) + " at #{time.strftime("%H:%M:%S")} from #{source})\n"
+      text = format_text( tweet['retweeted_status'], rt )
+      return text
+    end
+
+    if time.today?
+      timestr = time.strftime("%H:%M:%S")
+    else 
+      timestr = time.strftime("%m/%d %H:%M:%S")
+    end
+    if @friends.include?( user['id'] )
+      text += "[[ " + decorate( "#{user['screen_name']}", :underline=>true,  :bold=>true, :color => Color::GREEN ) +  " at #{timestr} from #{source} ]]\n"
+    else
+      text += "<< " + decorate( "#{user['screen_name']}", :underline=>true,  :bold=>true, :color => Color::GREEN ) +  " at #{timestr} from #{source} >>\n"
+    end
+    text += decorate_text( unescape( tweet['text'] ), entities )
+    text += "\n"
+
+    permalink = "http://twitter.com/%s/status/%d" % [ user['screen_name'], tweet['id'] ]
+    permalink = sprintf("%74s", permalink)
+    text += decorate( permalink, :color=>Color::GRAY )
+    text += "\n"
+    text += rtby if rtby
+    text += "-" * 74
+    text + "\n"
+  end
+
   def stream
-    puts "Streaming."
+    puts "Start streaming.\n"
+    puts "-" * 74
     u = URI::parse( STREAM_URL )
     http = http_new( u )
     request = Net::HTTP::Post.new( u.request_uri )
@@ -300,39 +325,30 @@ class Dokan
       http.request( request ) do |res|
         res.each_line( "\r\n" ) do |line|
           json = JSON::parse( line ) rescue next
-          entities = json['entities'] 
           if json['user'] and json['text']
-            time = Time.parse( json['created_at'] ).strftime("%H:%M:%S")
-            source = json['source'].gsub(/<[^>]+>/, '')
-            if json['retweeted_status']
-              rtsource = json['retweeted_status']['source'].gsub(/<[^>]+>/, '')
-              rttime = Time.parse( json['retweeted_status']['created_at'] )
-              now = Time.now
-              if rttime.year != now.year && rttime.month != now.month && rttime.day != now.day
-                timestr = rttime.strftime("%m/%d %H:%M:%S")
-              else 
-                timestr = rttime.strftime("%H:%M:%S")
-              end
-              puts "[" + decorate( "#{json['retweeted_status']['user']['screen_name']}", :underline=>true,  :bold=>true, :color => Color::GREEN ) +  " at #{timestr} from #{rtsource}]"
-              puts decorate_text( unescape( json['retweeted_status']['text'] ), entities )
-              puts "   (RT by " + decorate( "@#{json['user']['screen_name']}",  :underline=>true, :color=>  Color::GREEN ) + " at #{time} from #{source})"
-            else
-              puts "[" + decorate( "#{json['user']['screen_name']}", :underline => true, :bold=>true, :color => Color::GREEN )+ " at #{time.to_s} from #{source}]"
-              puts decorate_text( unescape( json['text'] ), entities )
-            end
-            puts "-" * 74
+            next if @ignores and @ignores =~ json['text']
+            puts format_text( json )
           elsif json['event'] == "list_member_removed"
             puts "** Removed from: #{json['target_object']['full_name']}"
             puts "-" * 74
           elsif json['event'] == "list_member_added"
             puts "** Added to: #{json['target_object']['full_name']}"
             puts "-" * 74
+          elsif json['event'] == 'follow'
+            if json['source']['screen_name'] == @user
+              @friends.push json['target']['id']
+            end
+          elsif json['friends']
+            @friends = json['friends']
           else
             puts "** Unhandled event: #{json['event']}"
             puts "-" * 74
           end
         end
       end
+    rescue
+      puts $!.to_s
+      puts $!.backtrace.join("\n")
     ensure
       http.finish
     end
@@ -397,6 +413,7 @@ opt[:stream]  = false
 opt[:stalker] = false
 opt[:color]   = false
 opt[:tags]    = Array.new
+opt[:ignores] = Array.new
 
 opts = OptionParser.new
 opts.on( "-a", "--auth",nil, "Authentication via OAuth") { opt[:auth] = true }
@@ -405,6 +422,7 @@ opts.on( "-d", "--default", nil, "Set as default user, or show current default u
 opts.on( "-e", "--extreme", nil, "Enable extreme mode. Don't use with command line pipe.") { opt[:extreme] = true }
 opts.on( "-t", "--tags=tag,tag...", Array, "Insert hashtag automatically. Comma-Separated values. (w/o `#')" ) { |v| opt[:tags] = v }
 opts.on( "-s", "--stream", nil, "Get timeline via user stream" ) { opt[:stream] = true }
+opts.on( "-i", "--ignore=word,word...", Array, "Ignore keywords (NG word)" ) { |v| opt[:ignores] = v }
 opts.on( "-c", "--color", nil, "Colorize stream text") { opt[:color] = true }
 opts.on( "-x", "--stalker", nil, "Stalking mode. All replies will be shown on stream.") { opt[:stalker] = true }
 opts.version = DOKAN_VERSION
