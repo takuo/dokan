@@ -1,6 +1,7 @@
 #!/usr/bin/ruby
 # -*- coding: utf-8 -*-
 #
+# The Dokanrock is utility script for TvRock based on Dokan.
 # The Dokan is a command line Twitter poster.
 #
 # Copyright (c) 2010 Takuo Kitame <kitame@debian.org>
@@ -86,7 +87,6 @@ class Dokan
     raise RuntimeError, "Could not find tvrock.log from registry!" unless retval
     return retval
   end
-
 
   def loadconf( consumer )
     @db.transaction do
@@ -234,7 +234,7 @@ class Dokan
         end 
       end
     end 
-    post(data) if data
+    post( data ) if data
   end
 end
 
