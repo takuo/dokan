@@ -11,8 +11,8 @@ License: Ruby's
 
 Ruby 1.8/1.9 以上用  
 
-Windowsの場合、OpenSSL, Zlib, Readline のインストール必須  
-libeay32.dll,ssleay32.dll,zlib.dll,readline.dll などを ruby.exeと同じ場所に置く
+Windowsの場合、OpenSSL, Zlib, Readline,Iconv のインストール必須  
+libeay32.dll,ssleay32.dll,zlib.dll,readline.dll,iconv.dll などを ruby.exeと同じ場所に置く
 
 必要な拡張ライブラリをインストール
 
@@ -84,17 +84,20 @@ OAuth認証(必須)
 TVRock での使い方
 ----------------
 
+開始と終了時はdokanrock.rbを使います。
+dokanrockはtvrockのログからステータスを取得して文字列を整形します。
+
 録画予約時の投稿
 
     CR:"D:ruby\bin\ruby.exe" "d:\dokan\dokan.rb" "録画予約 [%j %k-%l] %5「%d」 #%g"
 
 録画開始時の投稿
 
-    CS:"D:ruby\bin\ruby.exe" "d:\dokan\dokan.rb" "[%h]録画開始 [%j %k～%l] %5「%d」 #%g"
+    CS:"D:ruby\bin\ruby.exe" "d:\dokan\dokanrock.rb" -s "%d" -c "%5" -t "%g"
 
 録画終了時の投稿
 
-    CE:"D:ruby\bin\ruby.exe" "d:\dokan\dokan.rb" "[%h]録画予約 [%j %k～%l] %5「%d」 #%g"
+    CE:"D:ruby\bin\ruby.exe" "d:\dokan\dokanrock.rb" -e "%d" -c "%5" -t "%g"
 
-サンプル  
+サンプル
 http://twitter.com/ematikrock
