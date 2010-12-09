@@ -84,12 +84,12 @@ OAuth認証(必須)
 TVRock での使い方
 ----------------
 
-開始と終了時はdokanrock.rbを使います。
+開始と終了時はdokanrock.rbを使います。 
 dokanrockはtvrockのログからステータスを取得して文字列を整形します。
 
 録画予約時の投稿
 
-    CR:"D:\ruby\bin\ruby.exe" "d:\dokan\dokan.rb" "録画予約 [%j %k-%l] %5「%d」 #%g"
+    CR:"D:\ruby\bin\ruby.exe" "d:\dokan\dokanrock.rb" "録画予約 [%j %k-%l] %5「%d」 #%g"
 
 録画開始時の投稿
 
