@@ -224,7 +224,7 @@ class Dokan
     title = NKF::nkf( '-w', @title )
     channel = NKF::nkf( '-w', @channel )
     data = nil
-    search = /\[\d+\/\d+\/\d+ \d+:\d+:\d+ (\S+)\]:\[(\S+)\]番組「#{title}」 #{SEARCH[@mode]} Card=\S+, Error=(\d+), Sig=([\d.]+), Bitrate=(\S+), Drop=(\d+), Scrambling=(\d+), BcTimeDiff=(\S+), TimeAdj=(\S+), CPU_Weight=([0-9.]+%), FreeMem=(\S+), DiskFree=([0-9.]+%)/
+    search = /\[\d+\/\d+\/\d+ \d+:\d+:\d+ (\S+)\]:\[(\S+)\]番組「#{title}」 #{SEARCH[@mode]} Card=\S+, Error=(\d+), Sig=([\d\.]+), Bitrate=([\d\.]+)Mbps, Drop=(\d+), Scrambling=(\d+), BcTimeDiff=([\d\.+-]+)sec, TimeAdj=([\d\.+-]+)sec, CPU_Weight=([\d\.]+%), FreeMem=(\S+), DiskFree=([\d\.]+%)/
     open( file ) do |fp|
       while line = fp.gets
         line =  NKF::nkf( '-w', line )
