@@ -66,7 +66,6 @@ class Dokan
       auth( consumer, opt[:user] )
     end
     @tags = opt[:tags]
-    @tvrocklog = find_tvrock_log()
     @mode  = opt[:mode]
     @title = opt[:title]
     @channel = opt[:channel]
@@ -194,6 +193,7 @@ class Dokan
     url
   end
 
+  public
   def post( string )
     text = string.dup
     text = NKF::nkf( '-w', text )
@@ -219,13 +219,13 @@ class Dokan
     end
   end
 
-  public
   def rock
+    file = find_tvrock_log
     title = NKF::nkf( '-w', @title )
     channel = NKF::nkf( '-w', @channel )
     data = nil
     search = /\[\d+\/\d+\/\d+ \d+:\d+:\d+ (\S+)\]:\[(\S+)\]番組「#{title}」 #{SEARCH[@mode]} Card=\S+, Error=(\d+), Sig=([\d.]+), Bitrate=(\S+), Drop=(\d+), Scrambling=(\d+), BcTimeDiff=(\S+), TimeAdj=(\S+), CPU_Weight=([0-9.]+%), FreeMem=(\S+), DiskFree=([0-9.]+%)/
-    open( @tvrocklog ) do |fp|
+    open( file ) do |fp|
       while line = fp.gets
         line =  NKF::nkf( '-w', line )
         # need a last matched line
