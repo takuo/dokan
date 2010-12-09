@@ -89,15 +89,13 @@ dokanrockはtvrockのログからステータスを取得して文字列を整�
 
 録画予約時の投稿
 
-    CR:"D:ruby\bin\ruby.exe" "d:\dokan\dokan.rb" "録画予約 [%j %k-%l] %5「%d」 #%g"
+    CR:"D:\ruby\bin\ruby.exe" "d:\dokan\dokan.rb" "録画予約 [%j %k-%l] %5「%d」 #%g"
 
 録画開始時の投稿
 
-    CS:"D:ruby\bin\ruby.exe" "d:\dokan\dokanrock.rb" -s "%d" -c "%5" -t "%g"
+    CS:"D:\ruby\bin\ruby.exe" "d:\dokan\dokanrock.rb" -s "%d" -c "%5" -t "%g"
 
 録画終了時の投稿
 
-    CE:"D:ruby\bin\ruby.exe" "d:\dokan\dokanrock.rb" -e "%d" -c "%5" -t "%g"
+    CE:"D:\ruby\bin\ruby.exe" "d:\dokan\dokanrock.rb" -e "%d" -c "%5" -t "%g"
 
-サンプル
-http://twitter.com/ematikrock
