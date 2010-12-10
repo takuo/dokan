@@ -71,6 +71,7 @@ class Dokan
     @title   = NKF.nkf( '-w', opt[:title] ) if opt[:title]
     @channel = NKF.nkf( '-w', opt[:channel] ) if opt[:channel]
     @time    = NKF.nkf( '-w', opt[:time] ) if opt[:time]
+    @device  = opt[:device]
   end
 
   private
@@ -227,7 +228,11 @@ class Dokan
   def rock
     file = find_tvrock_log
     data = nil
-    search = /\[\d+\/\d+\/\d+ \d+:\d+:\d+ (\S+)\]:\[(\S+)\]番組「#{@title}」 #{SEARCH[@mode]} Card=\S+, Error=(\d+), Sig=([\d\.]+), Bitrate=([\d\.]+)Mbps, Drop=(\d+), Scrambling=(\d+), BcTimeDiff=([\d\.+-]+)sec, TimeAdj=([\d\.+-]+)sec, CPU_Weight=([\d\.]+%), FreeMem=(\S+), DiskFree=([\d\.]+%)/
+    if @device
+      search = /\[\d+\/\d+\/\d+ \d+:\d+:\d+ (\S+)\]:\[(#{@device})\]番組「#{@title}」 #{SEARCH[@mode]} Card=\S+, Error=(\d+), Sig=([\d\.]+), Bitrate=([\d\.]+)Mbps, Drop=(\d+), Scrambling=(\d+), BcTimeDiff=([\d\.+-]+)sec, TimeAdj=([\d\.+-]+)sec, CPU_Weight=([\d\.]+%), FreeMem=(\S+), DiskFree=([\d\.]+%)/
+    else
+      search = /\[\d+\/\d+\/\d+ \d+:\d+:\d+ (\S+)\]:\[(\S+)\]番組「#{@title}」 #{SEARCH[@mode]} Card=\S+, Error=(\d+), Sig=([\d\.]+), Bitrate=([\d\.]+)Mbps, Drop=(\d+), Scrambling=(\d+), BcTimeDiff=([\d\.+-]+)sec, TimeAdj=([\d\.+-]+)sec, CPU_Weight=([\d\.]+%), FreeMem=(\S+), DiskFree=([\d\.]+%)/
+    end
     
     open( file ) do |fp|
       while line = fp.gets
@@ -254,6 +259,7 @@ opt[:tags]    = Array.new
 opt[:mode]    = nil
 opt[:title]   = nil
 opt[:channel] = ""
+opt[:device]  = nil
 opt[:time]    = nil
 
 opts = OptionParser.new
@@ -261,10 +267,11 @@ opts.on( "-a", "--auth",nil, "Authentication via OAuth") { opt[:auth] = true }
 opts.on( "-u", "--user=user", String, "Username for Twitter" ) { |v| opt[:user] = v }
 opts.on( "-d", "--default", nil, "Set as default user, or show current default user" ) { |v| opt[:default] = true }
 opts.on( "-t", "--tags=tag,tag...", Array, "Insert hashtag automatically. Comma-Separated values. (w/o `#')" ) { |v| opt[:tags] = v }
-opts.on( "-s", "--start=title", String, "Start recording" ) { |v| opt[:mode] = :START; opt[:title] = NKF.nkf( '-w', v ) }
-opts.on( "-e", "--end=title", String, "End recording" ) { |v| opt[:mode] = :END; opt[:title] = NKF.nkf( '-w', v ) }
-opts.on( "-c", "--channel=channel", String, "Channel name" ) { |v| opt[:channel] = NKF.nkf( '-w', v ) }
-opts.on( "-r", "--reserve=timestring", String, "Time string" ) { |v| opt[:time] = NKF.nkf( '-w', v ) }
+opts.on( "-s", "--start=title", String, "Start recording title (%d)" ) { |v| opt[:mode] = :START; opt[:title] = NKF.nkf( '-w', v ) }
+opts.on( "-e", "--end=title", String, "End recording title (%d)" ) { |v| opt[:mode] = :END; opt[:title] = NKF.nkf( '-w', v ) }
+opts.on( "-c", "--channel=channel", String, "Channel name (%5)" ) { |v| opt[:channel] = NKF.nkf( '-w', v ) }
+opts.on( "-r", "--reserve=timestring", String, "Time string '[%i, %j %k-%l]'" ) { |v| opt[:time] = NKF.nkf( '-w', v ) }
+opts.on( "-h", "--hardware=devicecode", String, "TvRock Device code (%h)") { |v| opt[:device] = v }
 opts.version = DOKAN_VERSION
 opts.program_name = "dokanrock"
 opts.parse!( ARGV )
