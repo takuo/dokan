@@ -84,8 +84,10 @@ OAuth認証(必須)
 TVRock での使い方
 ----------------
 
-開始と終了時はdokanrock.rbを使います。 
-dokanrockはtvrockのログからステータスを取得して文字列を整形します。
+dokanrock.rbを使います。  
+dokanrockはtvrockのログからステータスを取得して文字列を整形します。  
+ログは -s/-e オプションで指定される番組タイトルと -hオプションで指定されるチューナーデバイスコードを元にマッチした最新のログを使用します。  
+-r オプションに録画時間などを指定することで、整形に時間情報を含めます。
 
 録画予約時の投稿
 
@@ -93,9 +95,9 @@ dokanrockはtvrockのログからステータスを取得して文字列を整�
 
 録画開始時の投稿
 
-    CS:"D:\ruby\bin\ruby.exe" "d:\dokan\dokanrock.rb" -r "[%k-%l]" -s "%d" -c "%5" -t "%g"
+    CS:"D:\ruby\bin\ruby.exe" "d:\dokan\dokanrock.rb" -h "%h" -r "[%k-%l]" -s "%d" -c "%5" -t "%g"
 
 録画終了時の投稿
 
-    CE:"D:\ruby\bin\ruby.exe" "d:\dokan\dokanrock.rb" -r "[%k-%l]" -e "%d" -c "%5" -t "%g"
+    CE:"D:\ruby\bin\ruby.exe" "d:\dokan\dokanrock.rb" -h "%h" -r "[%k-%l]" -e "%d" -c "%5" -t "%g"
 
