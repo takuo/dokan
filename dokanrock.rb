@@ -80,7 +80,11 @@ class Dokan
       while reg.gets
         vals = $_.split
         if vals[0] == 'DOCUMENT'
+          retval = File.join( vals[2], 'tvrock.log2' )
+          break if File.exist?( retval )
           retval = File.join( vals[2], 'tvrock.log' )
+          break if File.exist?( retval )
+          retval = nil
           break
         end
       end
@@ -228,10 +232,10 @@ class Dokan
     open( file ) do |fp|
       while line = fp.gets
         line =  NKF::nkf( '-w', line )
-        # need a last matched line
         if search =~ line
           data = "[%s]%s%s%s「%s」 [Er%s,Sg%s,Br%s,Dr%s,Sc%s,Td%s,Ta%s,TvRock V%s]" % [ $2, SEARCH[@mode], @time ? " #{@time} " : " ", @channel,@title,$3,$4,$5,$6,$7,$8,$9,$1 ]
           data.gsub!(/#/, '&#35;')
+          break if File.extname( file ) == ".log2"
         end 
       end
     end 
