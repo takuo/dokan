@@ -79,7 +79,7 @@ class Dokan
     retval = nil
     IO::popen('reg QUERY HKCU\Software\TvRock /v DOCUMENT') do |reg|
       while reg.gets
-        vals = $_.split
+        vals = $_.chomp.split( " ", 3 )
         if vals[0] == 'DOCUMENT'
           retval = File.join( vals[2], 'tvrock.log2' )
           break if File.exist?( retval )
