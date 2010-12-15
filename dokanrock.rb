@@ -229,11 +229,11 @@ class Dokan
     file = find_tvrock_log
     data = nil
     if @device
-      search = /\[\d+\/\d+\/\d+ \d+:\d+:\d+ (\S+)\]:\[(#{@device})\]番組「#{@title}」 #{SEARCH[@mode]} Card=\S+, Error=(\d+), Sig=([\d\.]+), Bitrate=([\d\.]+)Mbps, Drop=(\d+), Scrambling=(\d+), BcTimeDiff=([\d\.+-]+)sec, TimeAdj=([\d\.+-]+)sec, CPU_Weight=([\d\.]+%), FreeMem=(\S+), DiskFree=([\d\.]+%)/
+      search = /\[\d+\/\d+\/\d+ \d+:\d+:\d+ (\S+)\]:\[(#{@device})\]番組「#{Regexp.quote(@title)}」 #{SEARCH[@mode]} Card=\S+, Error=(\d+), Sig=([\d\.]+), Bitrate=([\d\.]+)Mbps, Drop=(\d+), Scrambling=(\d+), BcTimeDiff=([\d\.+-]+)sec, TimeAdj=([\d\.+-]+)sec, CPU_Weight=([\d\.]+%), FreeMem=(\S+), DiskFree=([\d\.]+%)/
     else
-      search = /\[\d+\/\d+\/\d+ \d+:\d+:\d+ (\S+)\]:\[(\S+)\]番組「#{@title}」 #{SEARCH[@mode]} Card=\S+, Error=(\d+), Sig=([\d\.]+), Bitrate=([\d\.]+)Mbps, Drop=(\d+), Scrambling=(\d+), BcTimeDiff=([\d\.+-]+)sec, TimeAdj=([\d\.+-]+)sec, CPU_Weight=([\d\.]+%), FreeMem=(\S+), DiskFree=([\d\.]+%)/
+      search = /\[\d+\/\d+\/\d+ \d+:\d+:\d+ (\S+)\]:\[(\S+)\]番組「#{Regexp.quote(@title)}」 #{SEARCH[@mode]} Card=\S+, Error=(\d+), Sig=([\d\.]+), Bitrate=([\d\.]+)Mbps, Drop=(\d+), Scrambling=(\d+), BcTimeDiff=([\d\.+-]+)sec, TimeAdj=([\d\.+-]+)sec, CPU_Weight=([\d\.]+%), FreeMem=(\S+), DiskFree=([\d\.]+%)/
     end
-    
+
     open( file ) do |fp|
       while line = fp.gets
         line =  NKF::nkf( '-w', line )
