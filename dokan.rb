@@ -44,18 +44,6 @@ if RUBY_VERSION >= "1.9.0" and HMAC::VERSION < "0.4.0"
   end
 end
 
-module Net
-  class HTTPResponse
-    def each_line( rs = "\n" )
-      stream_check
-      while line = @socket.readuntil( rs )
-        yield line
-      end
-      self
-    end
-  end
-end
-
 class Time
   def today?
     today = Time.now
@@ -322,27 +310,32 @@ class Dokan
     request.set_form_data( { "replies" => "all" } ) if @stalker
     request.oauth!( http, @consumer, @access )
     begin
+      buf = ''
       http.request( request ) do |res|
-        res.each_line( "\r\n" ) do |line|
-          json = JSON::parse( line ) rescue next
-          if json['user'] and json['text']
-            next if @ignores and @ignores =~ json['text']
-            puts format_text( json )
-          elsif json['event'] == "list_member_removed"
-            puts "** Removed from: #{json['target_object']['full_name']}"
-            puts "-" * 74
-          elsif json['event'] == "list_member_added"
-            puts "** Added to: #{json['target_object']['full_name']}"
-            puts "-" * 74
-          elsif json['event'] == 'follow'
-            if json['source']['screen_name'] == @user
-              @friends.push json['target']['id']
+        raise RuntimeError, "Error on HTTP HTTP:#{res.code} #{res.to_s}" if res.code.to_i != 200
+        res.read_body do |str|
+          buf << str
+          buf.gsub!( /[\s\S]+?\r\n/ ) do |chunk|
+            json = JSON::parse( chunk ) rescue next
+            if json['user'] and json['text']
+              next if @ignores and @ignores =~ json['text']
+              puts format_text( json )
+            elsif json['event'] == "list_member_removed"
+              puts "** Removed from: #{json['target_object']['full_name']}"
+              puts "-" * 74
+            elsif json['event'] == "list_member_added"
+              puts "** Added to: #{json['target_object']['full_name']}"
+              puts "-" * 74
+            elsif json['event'] == 'follow'
+              if json['source']['screen_name'] == @user
+                @friends.push json['target']['id']
+              end
+            elsif json['friends']
+              @friends = json['friends']
+            else
+              puts "** Unhandled event: #{json['event']}"
+              puts "-" * 74
             end
-          elsif json['friends']
-            @friends = json['friends']
-          else
-            puts "** Unhandled event: #{json['event']}"
-            puts "-" * 74
           end
         end
       end
