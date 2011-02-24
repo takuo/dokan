@@ -91,6 +91,7 @@ class Dokan
     @color = opt[:color]
     @ignores = Regexp.new( opt[:ignores].join("|"), Regexp::IGNORECASE ) if opt[:ignores].size > 0
     @friends = []
+    @userdb = {}
   end
 
   private
@@ -317,6 +318,9 @@ class Dokan
           buf << str
           buf.gsub!( /[\s\S]+?\r\n/ ) do |chunk|
             json = JSON::parse( chunk ) rescue next
+            if json['user']
+              @userdb[json['user']['id']] = json['user'] if !@userdb.key?(json['user']['id'])
+            end
             if json['user'] and json['text']
               next if @ignores and @ignores =~ json['text']
               puts format_text( json )
@@ -330,10 +334,27 @@ class Dokan
               if json['source']['screen_name'] == @user
                 @friends.push json['target']['id']
               end
+            elsif json['event'] == 'favorite' or json['event'] == 'unfavorite'
+              target = json['target_object']
+              user = json['source']['screen_name']
+              puts "** %s %ss \n %s" % [ user, json['event'], target['text'] ]
+              permalink = "http://twitter.com/%s/status/%d" % [ target['user']['screen_name'], target['id'] ]
+              permalink = sprintf("%74s", permalink)
+              puts decorate( permalink, :color=>Color::GRAY )
+              puts "-" * 74
             elsif json['friends']
               @friends = json['friends']
+            elsif json['delete']
+              uid = json['delete']['status']['user_id']
+              sid = json['delete']['status']['id']
+              if @userdb[uid]
+                uid = @userdb[uid]['screen_name']
+              end
+              puts "** Deleted: http://twitter.com/%s/status/%s" % [ uid, sid ]
+              puts "-" * 74
             else
               puts "** Unhandled event: #{json['event']}"
+              p json
               puts "-" * 74
             end
           end
