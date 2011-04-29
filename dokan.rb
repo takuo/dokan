@@ -162,8 +162,8 @@ class Dokan
     lines = res.body.split( /\n/ )
     i = 0
     while i < lines.size
-      if lines[i] =~ /oauth_pin/
-        pin = lines[i+1].chomp.strip
+      if lines[i] =~ /<code>(\d+)/
+        pin = $1
         break
       end
       i+=1;
