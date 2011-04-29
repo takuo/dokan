@@ -56,7 +56,8 @@ class Dokan
   CONSUMER_SEC="ZlR9oVd03qlhqnKvEO7QqN7rbjhEXptKUfqzOu3bY4"
   TWEET_URL = "https://api.twitter.com/1/statuses/update.json"
   STREAM_URL = "https://userstream.twitter.com/2/user.json"
-  GOOGL_SHORTEN = "http://goo.gl/api/shorten"
+#  GOOGL_SHORTEN = "http://goo.gl/api/shorten"
+  GOOGL_SHORTEN = "http://ga.vg/api/shorten"
   BITLY_API = "http://api.bit.ly/v3/shorten?"
   BITLY_LOGIN = "dokan"
   BITLY_KEY   = "R_885043b52ca063cc775c95acc9594a5e"
@@ -90,6 +91,7 @@ class Dokan
     @tags = opt[:tags]
     @color = opt[:color]
     @ignores = Regexp.new( opt[:ignores].join("|"), Regexp::IGNORECASE ) if opt[:ignores].size > 0
+    @ignore_users = opt[:ignore_users]
     @friends = []
     @userdb = {}
   end
@@ -323,6 +325,7 @@ class Dokan
             end
             if json['user'] and json['text']
               next if @ignores and @ignores =~ json['text']
+              next if @ignore_users.include?( json['user']['screen_name'] )
               puts format_text( json )
             elsif json['event'] == "list_member_removed"
               puts "** Removed from: #{json['target_object']['full_name']}"
@@ -344,7 +347,7 @@ class Dokan
               puts "-" * 74
             elsif json['friends']
               @friends = json['friends']
-            elsif json['delete']
+            elsif json['delete'] && json['delete']['status']
               uid = json['delete']['status']['user_id']
               sid = json['delete']['status']['id']
               if @userdb[uid]
@@ -428,6 +431,7 @@ opt[:stalker] = false
 opt[:color]   = false
 opt[:tags]    = Array.new
 opt[:ignores] = Array.new
+opt[:ignore_users] = Array.new
 
 opts = OptionParser.new
 opts.on( "-a", "--auth",nil, "Authentication via OAuth") { opt[:auth] = true }
@@ -437,6 +441,7 @@ opts.on( "-e", "--extreme", nil, "Enable extreme mode. Don't use with command li
 opts.on( "-t", "--tags=tag,tag...", Array, "Insert hashtag automatically. Comma-Separated values. (w/o `#')" ) { |v| opt[:tags] = v }
 opts.on( "-s", "--stream", nil, "Get timeline via user stream" ) { opt[:stream] = true }
 opts.on( "-i", "--ignore=word,word...", Array, "Ignore keywords (NG word)" ) { |v| opt[:ignores] = v }
+opts.on( "-I", "--ignore-user=user,user...", Array, "Ignore users" ) { |v| opt[:ignore_users] = v }
 opts.on( "-c", "--color", nil, "Colorize stream text") { opt[:color] = true }
 opts.on( "-x", "--stalker", nil, "Stalking mode. All replies will be shown on stream.") { opt[:stalker] = true }
 opts.version = DOKAN_VERSION
