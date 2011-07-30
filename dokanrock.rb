@@ -151,7 +151,7 @@ class Dokan
           "session[username_or_email]=#{user}",
           "session[password]=#{pass}",
           "submit=Allow" ].join( "&" )
-    u = URI::parse( "https://api.twitter.com/oauth/authorize" ) 
+    u = URI::parse( "https://api.twitter.com/oauth/authorize" )
     http = http_new( u, false )
     res = http.post( u.request_uri, query )
     raise RuntimeError, "HTTP: #{res.code}" if res.code != "200"
@@ -159,8 +159,8 @@ class Dokan
     lines = res.body.split( /\n/ )
     i = 0
     while i < lines.size
-      if lines[i] =~ /oauth_pin/
-        pin = lines[i+1].chomp.strip
+      if lines[i] =~ /<code>(\d+)/
+        pin = $1
         break
       end
       i+=1;
