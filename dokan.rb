@@ -52,8 +52,8 @@ class Time
 end
 
 class Dokan
-  CONSUMER_KEY="Lk9wVIWctgYK5eWwC9Texg"
-  CONSUMER_SEC="ZlR9oVd03qlhqnKvEO7QqN7rbjhEXptKUfqzOu3bY4"
+  CONSUMER_KEY="n3ffbB9xTNuiEmJPFjehQ"
+  CONSUMER_SEC="18t3QnB6KsueaSjMsZwI4pW6DZXiBw0RnvTuysDw40"
   TWEET_URL = "https://api.twitter.com/1/statuses/update.json"
   STREAM_URL = "https://userstream.twitter.com/2/user.json"
 #  GOOGL_SHORTEN = "http://goo.gl/api/shorten"
@@ -320,6 +320,7 @@ class Dokan
           buf << str
           buf.gsub!( /[\s\S]+?\r\n/ ) do |chunk|
             json = JSON::parse( chunk ) rescue next
+            next unless json.kind_of?(Hash)
             if json['user']
               @userdb[json['user']['id']] = json['user'] if !@userdb.key?(json['user']['id'])
             end
