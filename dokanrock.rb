@@ -44,8 +44,8 @@ if RUBY_VERSION >= "1.9.0" and HMAC::VERSION < "0.4.0"
 end
 
 class Dokan
-  CONSUMER_KEY="Lk9wVIWctgYK5eWwC9Texg"
-  CONSUMER_SEC="ZlR9oVd03qlhqnKvEO7QqN7rbjhEXptKUfqzOu3bY4"
+  CONSUMER_KEY="n3ffbB9xTNuiEmJPFjehQ"
+  CONSUMER_SEC="18t3QnB6KsueaSjMsZwI4pW6DZXiBw0RnvTuysDw40"
   TWEET_URL = "https://api.twitter.com/1/statuses/update.json"
   GOOGL_SHORTEN = "http://goo.gl/api/shorten"
   DOKAN_FILE = File.join( ENV['HOME'], ".dokanrc.db" )
