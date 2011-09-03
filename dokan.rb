@@ -3,7 +3,7 @@
 #
 # The Dokan is a command line Twitter poster.
 #
-# Copyright (c) 2010 Takuo Kitame <kitame@debian.org>
+# Copyright (c) 2011 Takuo Kitame <kitame@debian.org>
 # License: Ruby's
 #
 #
@@ -20,6 +20,7 @@ require 'json'
 require 'readline'
 require 'hmac'
 require 'nkf'
+require 'thread'
 
 DOKAN_VERSION = "4.0"
 
@@ -74,6 +75,8 @@ class Dokan
     GRAY    = "37"
   end
 
+  Tweet = Struct.new( :user, :status_id, :text )
+
   # new
   def initialize( opt )
     params = { :site => "https://api.twitter.com" }
@@ -124,7 +127,6 @@ class Dokan
     http = Net::HTTP.new( uri.host, uri.port )
     if uri.scheme == 'https'
       http.use_ssl = true
-      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
     end
     http
   end
@@ -134,7 +136,6 @@ class Dokan
     u = URI::parse rt.authorize_url
     http =  http_new( u, false )
     http.use_ssl = true
-    http.verify_mode = OpenSSL::SSL::VERIFY_NONE
     req = Net::HTTP::Post.new( u.request_uri )
     res = http.request( req )
     raise RuntimeError, "HTTP: #{res.code}" if res.code != "200"
@@ -295,18 +296,16 @@ class Dokan
     text += decorate_text( unescape( tweet['text'] ), entities )
     text += "\n"
 
-    permalink = "http://twitter.com/%s/status/%d" % [ user['screen_name'], tweet['id'] ]
+    permalink = "(%s) http://twitter.com/%s/status/%d" % [ @user, user['screen_name'], tweet['id'] ]
     permalink = sprintf("%74s", permalink)
     text += decorate( permalink, :color=>Color::GRAY )
     text += "\n"
     text += rtby if rtby
-    text += "-" * 74
-    text + "\n"
+    text
   end
 
   def stream
-    puts "Start streaming.\n"
-    puts "-" * 74
+    print "Start streaming for #{@user}.\n"
     u = URI::parse( STREAM_URL )
     http = http_new( u )
     request = Net::HTTP::Post.new( u.request_uri )
@@ -327,13 +326,17 @@ class Dokan
             if json['user'] and json['text']
               next if @ignores and @ignores =~ json['text']
               next if @ignore_users.include?( json['user']['screen_name'] )
-              puts format_text( json )
+              t = Tweet.new
+              t.user = json['user']['screen_name']
+              t.text = format_text( json )
+              t.status_id = json['id']
+              $gqueue.push t
             elsif json['event'] == "list_member_removed"
-              puts "** Removed from: #{json['target_object']['full_name']}"
-              puts "-" * 74
+              print "#{@user} ** Removed from: #{json['target_object']['full_name']}\n" +
+                    ("-" * 74) + "\n"
             elsif json['event'] == "list_member_added"
-              puts "** Added to: #{json['target_object']['full_name']}"
-              puts "-" * 74
+              print "#{@user} ** Added to: #{json['target_object']['full_name']}\n" +
+                    ("-" * 74) + "\n"
             elsif json['event'] == 'follow'
               if json['source']['screen_name'] == @user
                 @friends.push json['target']['id']
@@ -341,11 +344,11 @@ class Dokan
             elsif json['event'] == 'favorite' or json['event'] == 'unfavorite'
               target = json['target_object']
               user = json['source']['screen_name']
-              puts "** %s %ss \n %s" % [ user, json['event'], target['text'] ]
+              string_data = "** %s %ss \n %s" % [ user, json['event'], target['text'] ]
               permalink = "http://twitter.com/%s/status/%d" % [ target['user']['screen_name'], target['id'] ]
               permalink = sprintf("%74s", permalink)
-              puts decorate( permalink, :color=>Color::GRAY )
-              puts "-" * 74
+              string_data << decorate( permalink, :color=>Color::GRAY )
+              print string_data + "\n" + ("-" * 74) + "\n" 
             elsif json['friends']
               @friends = json['friends']
             elsif json['delete'] && json['delete']['status']
@@ -354,12 +357,10 @@ class Dokan
               if @userdb[uid]
                 uid = @userdb[uid]['screen_name']
               end
-              puts "** Deleted: http://twitter.com/%s/status/%s" % [ uid, sid ]
-              puts "-" * 74
+              print "** Deleted: http://twitter.com/%s/status/%s \n" % [ uid, sid ]
             else
-              puts "** Unhandled event: #{json['event']}"
-              p json
-              puts "-" * 74
+              print "** Unhandled event: #{json['event']}" +
+                    ("-" * 74) + "\n"
             end
           end
         end
@@ -462,12 +463,34 @@ Signal.trap(:TERM) {
   exit
 }
 
+$gqueue = Queue.new
+
+accounts = opt[:user].split(',')
+Thread.abort_on_exception = true
 ## run program
 begin
-  dokan = Dokan.new( opt )
   if opt[:stream]
-    dokan.stream
-    exit
+    accounts.each do |user|
+      account = opt.dup
+      account[:user] = user
+      dokan = Dokan.new( account )
+      Thread.new do
+        dokan.stream
+      end
+    end 
+    dupcache = []
+    while true
+       data = $gqueue.pop
+       next if dupcache.include?(data.status_id)
+       dupcache.push data.status_id
+       print data.text +
+       ("-" * 74) + "\n"
+       if dupcache.size > 100
+         dupcache.shift!
+       end
+    end
+  else
+    dokan = Dokan.new( opt )
   end
   if ARGV.size > 0
     dokan.post( ARGV.first )
