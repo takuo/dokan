@@ -301,7 +301,7 @@ class Dokan
     text += decorate( permalink, :color=>Color::GRAY )
     text += "\n"
     text += rtby if rtby
-    text
+    return text
   end
 
   def stream
@@ -318,7 +318,7 @@ class Dokan
         res.read_body do |str|
           buf << str
           buf.gsub!( /[\s\S]+?\r\n/ ) do |chunk|
-            json = JSON::parse( chunk )
+            json = JSON::parse( chunk ) rescue next
             next unless json.kind_of?(Hash)
             if json['user']
               @userdb[json['user']['id']] = json['user'] if !@userdb.key?(json['user']['id'])
@@ -357,13 +357,13 @@ class Dokan
               if @userdb[uid]
                 uid = @userdb[uid]['screen_name']
               end
-              print "** Deleted: http://twitter.com/%s/status/%s \n" % [ uid, sid ]
+              print "#{@user} ** Deleted: http://twitter.com/%s/status/%s \n" % [ uid, sid ]
               print ("-" * 74) + "\n"
             else
-              print "** Unhandled event: #{json['event']}" +
+              print "#{user} ** Unhandled event: #{json['event']}" +
                     ("-" * 74) + "\n"
             end
-            nil
+            next
           end
         end
       end
