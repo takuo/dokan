@@ -488,7 +488,7 @@ begin
        print data.text +
        ("-" * 74) + "\n"
        if dupcache.size > 100
-         dupcache.shift!
+         dupcache.shift
        end
     end
   else
