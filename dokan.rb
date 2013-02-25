@@ -21,7 +21,7 @@ require 'readline'
 require 'hmac'
 require 'nkf'
 
-DOKAN_VERSION = "4.0"
+DOKAN_VERSION = "4.1"
 
 # oAuth fix for >= 1.9.0
 if RUBY_VERSION >= "1.9.0" and HMAC::VERSION < "0.4.0"
@@ -54,10 +54,10 @@ end
 class Dokan
   CONSUMER_KEY="n3ffbB9xTNuiEmJPFjehQ"
   CONSUMER_SEC="18t3QnB6KsueaSjMsZwI4pW6DZXiBw0RnvTuysDw40"
-  TWEET_URL = "https://api.twitter.com/1/statuses/update.json"
-  STREAM_URL = "https://userstream.twitter.com/2/user.json"
-#  GOOGL_SHORTEN = "http://goo.gl/api/shorten"
-  GOOGL_SHORTEN = "http://ga.vg/api/shorten"
+  TWEET_URL = "https://api.twitter.com/1.1/statuses/update.json"
+  STREAM_URL = "https://userstream.twitter.com/1.1/user.json"
+  GOOGL_SHORTEN = "http://goo.gl/api/shorten"
+#  GOOGL_SHORTEN = "http://ga.vg/api/shorten"
   BITLY_API = "http://api.bit.ly/v3/shorten?"
   BITLY_LOGIN = "dokan"
   BITLY_KEY   = "R_885043b52ca063cc775c95acc9594a5e"
@@ -124,7 +124,7 @@ class Dokan
     http = Net::HTTP.new( uri.host, uri.port )
     if uri.scheme == 'https'
       http.use_ssl = true
-      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      # http.verify_mode = OpenSSL::SSL::VERIFY_NONE
     end
     http
   end
@@ -134,7 +134,7 @@ class Dokan
     u = URI::parse rt.authorize_url
     http =  http_new( u, false )
     http.use_ssl = true
-    http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    # http.verify_mode = OpenSSL::SSL::VERIFY_NONE
     req = Net::HTTP::Post.new( u.request_uri )
     res = http.request( req )
     raise RuntimeError, "HTTP: #{res.code}" if res.code != "200"
